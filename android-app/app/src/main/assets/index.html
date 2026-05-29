@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SafeHer - Navigation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="stylesheet" href="style.css">
+    
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</head>
+<body>
+    <!-- Fullscreen Map Background -->
+    <div id="map"></div>
+
+    <!-- UI Overlay Layer -->
+    <main class="app-ui">
+        
+        <!-- Search Card (Hidden during Live Nav) -->
+        <div class="search-card glass-panel" id="search-card">
+            <div class="search-card-header">
+                <button class="icon-btn menu-btn" id="menu-btn" aria-label="Menu">
+                    <ion-icon name="menu-outline"></ion-icon>
+                </button>
+                <div class="brand" style="display: flex; align-items: center; gap: 8px;">
+                    <img src="logo.png" alt="SafeHer Logo" style="width: 32px; height: 32px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,255,136,0.3);">
+                    <span class="logo-text">SafeHer</span>
+                </div>
+                <div class="spacer"></div>
+            </div>
+
+            <div class="search-inputs">
+                <div class="input-row">
+                    <ion-icon name="radio-button-on-outline" class="start-icon"></ion-icon>
+                    <input type="text" id="start-input" placeholder="Current Location (Leave blank for GPS)" value="">
+                </div>
+                <div class="input-divider">
+                    <div class="dotted-line"></div>
+                </div>
+                <div class="input-row">
+                    <ion-icon name="location-outline" class="dest-icon"></ion-icon>
+                    <input type="text" id="destination-input" placeholder="Where to? (e.g. Koramangala)">
+                </div>
+            </div>
+            
+            <div class="transport-modes" id="transport-modes">
+                <div class="mode-option active" data-mode="driving" data-submode="vehicle">
+                    <ion-icon name="car-outline"></ion-icon> Own Vehicle
+                </div>
+                <div class="mode-option" data-mode="driving" data-submode="cab">
+                    <ion-icon name="car-sport-outline"></ion-icon> Cab/Auto
+                </div>
+                <div class="mode-option" data-mode="foot" data-submode="foot">
+                    <ion-icon name="walk-outline"></ion-icon> Walk
+                </div>
+            </div>
+            
+            <div id="cab-details-container" class="input-row hidden" style="margin-bottom: 16px; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; border: 1px solid var(--glass-border);">
+                <ion-icon name="car" style="color: #FFB300;"></ion-icon>
+                <input type="text" id="cab-number-input" placeholder="Enter Cab/Auto Number Plate">
+            </div>
+            
+            <button id="search-btn" class="primary-btn search-btn">Find Safe Route</button>
+        </div>
+
+        <!-- Live Navigation Header (Visible during Live Nav) -->
+        <div class="nav-header-live hidden" id="nav-header-live">
+            <!-- Turn-by-Turn Banner -->
+            <div class="turn-banner" id="turn-banner">
+                <ion-icon name="arrow-up-outline" id="turn-icon" class="turn-icon"></ion-icon>
+                <div class="turn-text-group">
+                    <span class="turn-distance" id="turn-distance">In 50m</span>
+                    <span class="turn-instruction" id="turn-instruction">Head north</span>
+                </div>
+            </div>
+            
+            <!-- Trip Metrics -->
+            <div class="nav-metrics-card glass-panel">
+                <div class="nav-metrics">
+                    <div class="metric">
+                        <ion-icon name="time-outline"></ion-icon>
+                        <span id="nav-eta">-- min</span>
+                    </div>
+                    <div class="metric">
+                        <ion-icon name="swap-horizontal-outline"></ion-icon>
+                        <span id="nav-dist">-- km</span>
+                    </div>
+                </div>
+                <button id="end-nav-btn" class="primary-btn stop-btn">End Trip</button>
+            </div>
+        </div>
+
+        <!-- Floating Action Buttons -->
+        <div class="fab-container">
+            <button class="glass-fab" id="ai-chat-btn" title="SafeHer AI Chat">
+                <ion-icon name="chatbubbles-outline"></ion-icon>
+            </button>
+            <button class="glass-fab report-fab" id="report-hazard-btn" title="Report Hazard">
+                <ion-icon name="warning-outline"></ion-icon>
+            </button>
+        </div>
+
+        <!-- Floating SOS Area -->
+        <div class="sos-container">
+            <div class="sos-wrapper">
+                <div class="pulse-ring pulse-ring-1"></div>
+                <div class="pulse-ring pulse-ring-2"></div>
+                <button id="sos-btn" class="sos-button">
+                    <span>SOS</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Route Comparison Bottom Sheet -->
+        <div class="bottom-sheet glass-panel hidden" id="route-sheet">
+            <div class="sheet-handle"></div>
+            <h2>Route Options</h2>
+            
+            <div class="route-option safe-route active-route" id="select-safe-route">
+                <div class="route-details">
+                    <h3>Safest Route <ion-icon name="shield-checkmark" style="color:#00FF88"></ion-icon></h3>
+                    <p>Avoids poorly lit areas & crime zones.</p>
+                </div>
+                <div class="route-score">
+                    <span class="score green" id="safe-route-score">--/100</span>
+                    <span class="time" id="safe-route-time">-- min</span>
+                </div>
+            </div>
+
+            <div class="route-option fast-route" id="select-fast-route">
+                <div class="route-details">
+                    <h3>Fastest Route <ion-icon name="warning" style="color:#FFB300"></ion-icon></h3>
+                    <p>Might pass through risk zones.</p>
+                </div>
+                <div class="route-score">
+                    <span class="score red" id="fast-route-score">--/100</span>
+                    <span class="time" id="fast-route-time">-- min</span>
+                </div>
+            </div>
+
+            <!-- AI Safety Brief -->
+            <div class="ai-safety-brief" id="ai-safety-brief">
+                <div class="ai-header">
+                    <ion-icon name="sparkles"></ion-icon> SafeHer AI Analysis
+                </div>
+                <p id="ai-brief-text">Generating safety analysis...</p>
+            </div>
+            
+            <button class="primary-btn start-nav-btn" id="start-nav-btn">Start Safe Navigation</button>
+        </div>
+    </main>
+
+    <!-- Side Navigation Drawer -->
+    <div class="side-nav-overlay hidden" id="side-nav-overlay"></div>
+    <div class="side-nav glass-panel" id="side-nav">
+        <div class="nav-header">
+            <ion-icon name="person-circle-outline" class="profile-icon"></ion-icon>
+            <h2>My Profile</h2>
+            <button class="icon-btn close-nav-btn" id="close-nav-btn">
+                <ion-icon name="close-outline"></ion-icon>
+            </button>
+        </div>
+        
+        <div class="nav-content">
+            <h3>Official Helplines</h3>
+            <p class="nav-desc">Call these numbers for immediate public assistance.</p>
+            <ul class="contacts-list" style="margin-bottom: 24px;">
+                <li class="contact-item">
+                    <div class="contact-info"><span class="contact-name">Police Control</span><span class="contact-phone">100</span></div>
+                </li>
+                <li class="contact-item">
+                    <div class="contact-info"><span class="contact-name">Ambulance</span><span class="contact-phone">108</span></div>
+                </li>
+                <li class="contact-item">
+                    <div class="contact-info"><span class="contact-name">Women Helpline</span><span class="contact-phone">1091</span></div>
+                </li>
+            </ul>
+
+            <h3>Personal SOS Contacts</h3>
+            <p class="nav-desc">These contacts will receive an SMS with your live location if SOS is triggered.</p>
+            
+            <ul class="contacts-list" id="contacts-list"></ul>
+
+            <div class="add-contact-box">
+                <input type="text" id="new-contact-name" placeholder="Name (e.g. Mom)">
+                <input type="tel" id="new-contact-phone" placeholder="Phone Number">
+                <button id="add-contact-btn" class="primary-btn add-btn">Add Contact</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="hazard-modal" class="modal-overlay hidden">
+        <div class="modal-content glass-panel">
+            <h2>Report Hazard</h2>
+            <p>Pin a safety issue at your current location.</p>
+            <select id="hazard-type" class="glass-input">
+                <option value="lighting">Poor Lighting</option>
+                <option value="isolated">Isolated Street</option>
+                <option value="suspicious">Suspicious Activity</option>
+            </select>
+            <div class="call-actions">
+                <button class="call-btn decline" id="cancel-hazard">
+                    <ion-icon name="close-outline"></ion-icon>
+                </button>
+                <button class="call-btn accept" id="submit-hazard">
+                    <ion-icon name="checkmark-outline"></ion-icon>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Chatbot Modal -->
+    <div id="ai-chat-modal" class="modal-overlay hidden">
+        <div class="chat-container glass-panel">
+            <div class="chat-header">
+                <h3><ion-icon name="sparkles"></ion-icon> SafeHer AI Assistant</h3>
+                <button class="icon-btn" id="close-chat-btn"><ion-icon name="close-outline"></ion-icon></button>
+            </div>
+            <div class="chat-messages" id="chat-messages">
+                <div class="chat-msg ai-msg">Hi! I am SafeHer AI. I can give you safety advice or inform you about women's legal rights in India. How can I help?</div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" class="glass-input chat-input" placeholder="Type your question...">
+                <button class="icon-btn send-btn" id="chat-send-btn"><ion-icon name="send"></ion-icon></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
