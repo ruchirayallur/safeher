@@ -23,7 +23,7 @@ body { background-color: var(--bg-dark); color: var(--text-main); overflow: hidd
 .search-card { margin: 16px; padding: 16px; border-radius: 20px; display: flex; flex-direction: column; }
 .search-card-header { display: flex; align-items: center; margin-bottom: 16px; }
 .menu-btn { font-size: 32px; margin-right: 12px; }
-.logo-text { font-size: 22px; font-weight: 700; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.logo-text { font-size: 22px; font-weight: 700; background: var(--primary-gradient); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
 .search-inputs { background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 12px; margin-bottom: 16px; border: 1px solid var(--glass-border); }
 .input-row { display: flex; align-items: center; }
 .input-row ion-icon { font-size: 20px; margin-right: 12px; }
