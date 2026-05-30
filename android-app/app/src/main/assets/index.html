@@ -95,6 +95,9 @@
 
         <!-- Floating Action Buttons -->
         <div class="fab-container">
+            <button class="glass-fab" id="map-style-btn" title="Map Style">
+                <ion-icon name="layers-outline"></ion-icon>
+            </button>
             <button class="glass-fab" id="ai-chat-btn" title="SafeHer AI Chat">
                 <ion-icon name="chatbubbles-outline"></ion-icon>
             </button>
@@ -278,6 +281,20 @@
                     <!-- Dynamically populated -->
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Map Style Modal -->
+    <div id="map-style-modal" class="modal-overlay hidden">
+        <div class="modal-content glass-panel" style="width: 80%;">
+            <h2>Map Style</h2>
+            <div class="map-style-options" style="display:flex; flex-direction:column; gap:12px; margin-top:20px;">
+                <button class="primary-btn style-btn active" data-style="dark">Dark Mode</button>
+                <button class="primary-btn style-btn" data-style="light" style="background: rgba(255,255,255,0.1);">Light Mode</button>
+                <button class="primary-btn style-btn" data-style="satellite" style="background: rgba(255,255,255,0.1);">Satellite</button>
+                <button class="primary-btn style-btn" data-style="streets" style="background: rgba(255,255,255,0.1);">Streets</button>
+            </div>
+            <button class="icon-btn" id="close-style-btn" style="margin-top:24px; font-size:32px; width: 100%;"><ion-icon name="close-circle-outline"></ion-icon></button>
         </div>
     </div>
 

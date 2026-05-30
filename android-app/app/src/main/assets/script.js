@@ -16,16 +16,49 @@ document.addEventListener('DOMContentLoaded', () => {
         attribution: '&copy; OpenStreetMap', maxZoom: 20
     });
 
-    darkLayer.addTo(map);
-
     const baseMaps = {
-        "Dark Mode": darkLayer,
-        "Light Mode": lightLayer,
-        "Satellite": satelliteLayer,
-        "Streets": streetLayer
+        "dark": darkLayer,
+        "light": lightLayer,
+        "satellite": satelliteLayer,
+        "streets": streetLayer
     };
     
-    L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
+    let activeMapLayer = darkLayer;
+    activeMapLayer.addTo(map);
+
+    // --- Map Style Modal Logic ---
+    const styleModal = document.getElementById('map-style-modal');
+    document.getElementById('map-style-btn').addEventListener('click', () => {
+        styleModal.classList.remove('hidden');
+    });
+    document.getElementById('close-style-btn').addEventListener('click', () => {
+        styleModal.classList.add('hidden');
+    });
+
+    document.querySelectorAll('.style-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            // Update active styling
+            document.querySelectorAll('.style-btn').forEach(b => {
+                b.classList.remove('active');
+                b.style.background = 'rgba(255,255,255,0.1)';
+            });
+            const target = e.currentTarget;
+            target.classList.add('active');
+            target.style.background = 'var(--primary-gradient)';
+            
+            // Switch layer
+            map.removeLayer(activeMapLayer);
+            const styleKey = target.dataset.style;
+            activeMapLayer = baseMaps[styleKey];
+            activeMapLayer.addTo(map);
+            
+            // Bring routes to front if they exist
+            if(typeof safeRouteLayer !== 'undefined' && safeRouteLayer) safeRouteLayer.bringToFront();
+            if(typeof fastRouteLayer !== 'undefined' && fastRouteLayer) fastRouteLayer.bringToFront();
+            
+            setTimeout(() => { styleModal.classList.add('hidden'); }, 200);
+        });
+    });
 
     const createSafeIcon = (color, emoji) => L.divIcon({
         className: 'custom-icon',
