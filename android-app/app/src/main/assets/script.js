@@ -2,9 +2,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 1. Map & Icons ---
     const map = L.map('map', { zoomControl: false }).setView([12.9716, 77.5946], 14);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    
+    const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; OpenStreetMap', subdomains: 'abcd', maxZoom: 20
-    }).addTo(map);
+    });
+    const lightLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap', subdomains: 'abcd', maxZoom: 20
+    });
+    const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri', maxZoom: 20
+    });
+    const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap', maxZoom: 20
+    });
+
+    darkLayer.addTo(map);
+
+    const baseMaps = {
+        "Dark Mode": darkLayer,
+        "Light Mode": lightLayer,
+        "Satellite": satelliteLayer,
+        "Streets": streetLayer
+    };
+    
+    L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
 
     const createSafeIcon = (color, emoji) => L.divIcon({
         className: 'custom-icon',
@@ -40,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
     closeNavBtn.addEventListener('click', closeNav);
     sideNavOverlay.addEventListener('click', closeNav);
 
-    let emergencyContacts = [];
+    let emergencyContacts = JSON.parse(localStorage.getItem('emergencyContacts')) || [];
     const renderContacts = () => {
         document.getElementById('contacts-list').innerHTML = '';
         emergencyContacts.forEach((contact, index) => {
@@ -55,6 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             document.getElementById('contacts-list').appendChild(li);
         });
+        localStorage.setItem('emergencyContacts', JSON.stringify(emergencyContacts));
     };
     window.removeContact = (index) => { emergencyContacts.splice(index, 1); renderContacts(); };
     document.getElementById('add-contact-btn').addEventListener('click', () => {
@@ -482,12 +504,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Stop GPS Watch
         if(watchId !== null) navigator.geolocation.clearWatch(watchId);
         
-        // UI Switch
-        document.getElementById('search-card').classList.remove('hidden');
-        document.getElementById('nav-header-live').classList.add('hidden');
-        if (safeRouteLayer) map.removeLayer(safeRouteLayer);
-        if (fastRouteLayer) map.removeLayer(fastRouteLayer);
-        map.setView([12.9716, 77.5946], 14);
+        // Show Rating Modal
+        document.getElementById('rating-modal').classList.remove('hidden');
     });
 
 
@@ -522,22 +540,16 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const startSosHold = (e) => {
-        if(e.type === 'touchstart') e.preventDefault();
-        isHolding = true; sosWrapper.classList.add('pulse-active');
-        if (navigator.vibrate) navigator.vibrate(50);
-        holdTimer = setTimeout(() => { if (isHolding) triggerEmergency(); }, 3000);
-    };
-    const endSosHold = (e) => {
-        if(e.type === 'touchend') e.preventDefault();
-        isHolding = false; clearTimeout(holdTimer); sosWrapper.classList.remove('pulse-active');
+        if(e) e.preventDefault();
+        sosWrapper.classList.add('pulse-active');
+        triggerEmergency();
+        setTimeout(() => {
+            sosWrapper.classList.remove('pulse-active');
+        }, 1500);
     };
 
-    sosBtn.addEventListener('mousedown', startSosHold);
-    sosBtn.addEventListener('mouseup', endSosHold);
-    sosBtn.addEventListener('mouseleave', endSosHold);
+    sosBtn.addEventListener('click', startSosHold);
     sosBtn.addEventListener('touchstart', startSosHold, {passive: false});
-    sosBtn.addEventListener('touchend', endSosHold, {passive: false});
-    sosBtn.addEventListener('touchcancel', endSosHold, {passive: false});
 
 
     // --- 6. Community Hazard & Fake Call ---
@@ -592,5 +604,116 @@ document.addEventListener('DOMContentLoaded', () => {
 
     chatSendBtn.addEventListener('click', handleChatSend);
     chatInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') handleChatSend(); });
+
+    // --- 9. Analytics & Rating ---
+    const ratingModal = document.getElementById('rating-modal');
+    const starIcons = document.querySelectorAll('#star-rating ion-icon');
+    let currentRating = 0;
+
+    starIcons.forEach(star => {
+        star.addEventListener('click', (e) => {
+            currentRating = parseInt(e.target.dataset.value);
+            starIcons.forEach(s => {
+                if (parseInt(s.dataset.value) <= currentRating) {
+                    s.name = 'star';
+                    s.classList.add('active');
+                } else {
+                    s.name = 'star-outline';
+                    s.classList.remove('active');
+                }
+            });
+        });
+    });
+
+    const closeRatingModalAndResetNav = () => {
+        ratingModal.classList.add('hidden');
+        document.getElementById('search-card').classList.remove('hidden');
+        document.getElementById('nav-header-live').classList.add('hidden');
+        if (safeRouteLayer) map.removeLayer(safeRouteLayer);
+        if (fastRouteLayer) map.removeLayer(fastRouteLayer);
+        map.setView([12.9716, 77.5946], 14);
+        
+        // Reset stars
+        currentRating = 0;
+        starIcons.forEach(s => { s.name = 'star-outline'; s.classList.remove('active'); });
+        document.getElementById('rating-comment').value = '';
+    };
+
+    document.getElementById('skip-rating-btn').addEventListener('click', closeRatingModalAndResetNav);
+
+    document.getElementById('submit-rating-btn').addEventListener('click', () => {
+        if (currentRating > 0) {
+            let trips = JSON.parse(localStorage.getItem('safeHerTrips')) || [];
+            
+            const startName = startInput.value.trim() || 'Current Location';
+            const destName = destInput.value.trim() || 'Destination';
+            const comment = document.getElementById('rating-comment').value.trim();
+            
+            trips.push({
+                date: new Date().toISOString(),
+                start: startName,
+                dest: destName,
+                mode: transportMode,
+                rating: currentRating,
+                comment: comment
+            });
+            localStorage.setItem('safeHerTrips', JSON.stringify(trips));
+            
+            alert('Thank you! Your safety rating helps improve SafeHer.');
+        }
+        closeRatingModalAndResetNav();
+    });
+
+    // --- 10. Reports Dashboard ---
+    const reportsModal = document.getElementById('reports-modal');
+    document.getElementById('view-reports-btn').addEventListener('click', () => {
+        // Close side nav
+        closeNav();
+        
+        // Open reports
+        reportsModal.classList.remove('hidden');
+        
+        const trips = JSON.parse(localStorage.getItem('safeHerTrips')) || [];
+        document.getElementById('total-trips-stat').innerText = trips.length;
+        
+        const avgStat = document.getElementById('avg-safety-stat');
+        const routesList = document.getElementById('past-routes-list');
+        routesList.innerHTML = '';
+        
+        if (trips.length === 0) {
+            avgStat.innerText = '--';
+            routesList.innerHTML = '<p style="color:var(--text-muted); text-align:center; margin-top:20px;">No trips recorded yet.</p>';
+            return;
+        }
+        
+        let totalRating = 0;
+        // Show newest first
+        const sortedTrips = [...trips].reverse();
+        
+        sortedTrips.forEach(trip => {
+            totalRating += trip.rating;
+            const date = new Date(trip.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            
+            const card = document.createElement('div');
+            card.className = 'route-history-card';
+            card.innerHTML = `
+                <div class="route-history-info">
+                    <h5>${trip.start} &rarr; ${trip.dest}</h5>
+                    <p>${date} &bull; Mode: ${trip.mode}</p>
+                </div>
+                <div class="route-history-rating">
+                    ${trip.rating} <ion-icon name="star"></ion-icon>
+                </div>
+            `;
+            routesList.appendChild(card);
+        });
+        
+        const avg = (totalRating / trips.length).toFixed(1);
+        avgStat.innerText = avg + ' / 5';
+    });
+
+    document.getElementById('close-reports-btn').addEventListener('click', () => {
+        reportsModal.classList.add('hidden');
+    });
 
 });

@@ -189,6 +189,11 @@
                 <input type="tel" id="new-contact-phone" placeholder="Phone Number">
                 <button id="add-contact-btn" class="primary-btn add-btn">Add Contact</button>
             </div>
+            
+            <h3 style="margin-top: 24px;">Analytics</h3>
+            <button id="view-reports-btn" class="primary-btn add-btn" style="background: rgba(0,255,136,0.15); border: 1px solid #00FF88; color: #00FF88; margin-top: 8px;">
+                <ion-icon name="analytics-outline" style="margin-right: 8px; vertical-align: text-bottom;"></ion-icon> View Safety Reports
+            </button>
         </div>
     </div>
 
@@ -226,6 +231,52 @@
             <div class="chat-input-area">
                 <input type="text" id="chat-input" class="glass-input chat-input" placeholder="Type your question...">
                 <button class="icon-btn send-btn" id="chat-send-btn"><ion-icon name="send"></ion-icon></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rating Modal -->
+    <div id="rating-modal" class="modal-overlay hidden">
+        <div class="modal-content glass-panel" style="width: 90%;">
+            <h2>Rate Route Safety</h2>
+            <p style="margin-bottom: 16px; color: var(--text-muted);">How safe did you feel on this route?</p>
+            <div class="star-rating" id="star-rating">
+                <ion-icon name="star-outline" data-value="1"></ion-icon>
+                <ion-icon name="star-outline" data-value="2"></ion-icon>
+                <ion-icon name="star-outline" data-value="3"></ion-icon>
+                <ion-icon name="star-outline" data-value="4"></ion-icon>
+                <ion-icon name="star-outline" data-value="5"></ion-icon>
+            </div>
+            <textarea id="rating-comment" class="glass-input" placeholder="Any safety concerns or comments?" rows="3" style="resize:none;"></textarea>
+            <div class="call-actions">
+                <button class="primary-btn add-btn" id="skip-rating-btn" style="width: 45%; background: rgba(255,255,255,0.1);">Skip</button>
+                <button class="primary-btn add-btn" id="submit-rating-btn" style="width: 45%;">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports Modal -->
+    <div id="reports-modal" class="modal-overlay hidden">
+        <div class="chat-container glass-panel" style="height: 85vh; max-width: 95%;">
+            <div class="chat-header">
+                <h3><ion-icon name="analytics-outline"></ion-icon> Safety Reports</h3>
+                <button class="icon-btn" id="close-reports-btn"><ion-icon name="close-outline"></ion-icon></button>
+            </div>
+            <div class="reports-content" style="padding: 16px; overflow-y: auto; flex-grow: 1;">
+                <div class="reports-summary" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <div class="summary-card" style="flex:1; background: rgba(255,255,255,0.05); padding: 16px; border-radius: 12px; border: 1px solid var(--glass-border); text-align: center;">
+                        <h4 style="color: var(--text-muted); font-size: 12px;">Total Trips</h4>
+                        <div id="total-trips-stat" style="font-size: 24px; font-weight: bold; color: white;">0</div>
+                    </div>
+                    <div class="summary-card" style="flex:1; background: rgba(255,255,255,0.05); padding: 16px; border-radius: 12px; border: 1px solid var(--glass-border); text-align: center;">
+                        <h4 style="color: var(--text-muted); font-size: 12px;">Avg Safety</h4>
+                        <div id="avg-safety-stat" style="font-size: 24px; font-weight: bold; color: #00FF88;">--</div>
+                    </div>
+                </div>
+                <h3 style="margin-bottom: 12px; font-size: 16px;">Past Routes</h3>
+                <div id="past-routes-list" style="display: flex; flex-direction: column; gap: 10px;">
+                    <!-- Dynamically populated -->
+                </div>
             </div>
         </div>
     </div>

@@ -138,3 +138,21 @@ body { background-color: var(--bg-dark); color: var(--text-main); overflow: hidd
 .live-gps-marker { background: #4285F4; width: 18px; height: 18px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 15px rgba(66, 133, 244, 0.8); transition: all 0.5s ease; }
 .leaflet-popup-content-wrapper { background: var(--glass-bg); color: white; backdrop-filter: blur(10px); border: 1px solid var(--glass-border); }
 .leaflet-popup-tip { background: rgba(10, 10, 16, 0.7); }
+
+/* Custom Leaflet Layer Control */
+.leaflet-control-layers { background: var(--glass-bg) !important; border: 1px solid var(--glass-border) !important; border-radius: 12px !important; backdrop-filter: blur(10px) !important; -webkit-backdrop-filter: blur(10px) !important; color: white !important; }
+.leaflet-control-layers-list { color: white; }
+.leaflet-control-layers-expanded { padding: 10px !important; }
+.leaflet-control-layers label { cursor: pointer; display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.leaflet-control-layers-selector { margin-top: 0; }
+
+/* Star Rating */
+.star-rating { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; font-size: 40px; color: var(--text-muted); }
+.star-rating ion-icon { cursor: pointer; transition: color 0.2s, transform 0.2s; }
+.star-rating ion-icon.active { color: #FFD700; transform: scale(1.1); }
+
+/* Past Routes List Item */
+.route-history-card { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; border: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; }
+.route-history-info h5 { font-size: 14px; margin-bottom: 4px; color: white; }
+.route-history-info p { font-size: 12px; color: var(--text-muted); }
+.route-history-rating { display: flex; align-items: center; gap: 4px; color: #FFD700; font-size: 16px; font-weight: bold; }
